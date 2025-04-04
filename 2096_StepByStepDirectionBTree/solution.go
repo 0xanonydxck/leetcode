@@ -1,118 +1,34 @@
 package stepbystepdirectionbtree
 
-const (
-	UP    = 'U'
-	LEFT  = 'L'
-	RIGHT = 'R'
-)
+import "strings"
 
 func getDirections(root *TreeNode, startValue int, destValue int) string {
-	middlePoint := findLowestAncestor(root, startValue, destValue)
-	startPath := buildUpPath(middlePoint, startValue)
-	destPath := buildDestPath(middlePoint, destValue)
-	return startPath + destPath
+	arrToS := dfs(root, []byte{}, startValue)
+	arrToD := dfs(root, []byte{}, destValue)
+	i := 0
+	for len(arrToS) > i && len(arrToD) > i && arrToS[i] == arrToD[i] {
+		i++
+	}
+	pathUp := strings.Repeat("U", len(arrToS)-i)
+	pathDown := string(arrToD[i:])
+	return pathUp + pathDown
 }
 
-func buildUpPath(root *TreeNode, point int) string {
-	var dfs func(root *TreeNode, point int, path []rune) (bool, []rune)
-	dfs = func(root *TreeNode, point int, path []rune) (bool, []rune) {
-		if root == nil {
-			return false, path
-		}
-
-		if root.Val == point {
-			return true, path
-		}
-
-		left, leftPath := dfs(root.Left, point, append(path, UP))
-		if left {
-			return left, leftPath
-		}
-
-		right, rightPath := dfs(root.Right, point, append(path, UP))
-		if right {
-			return right, rightPath
-		}
-
-		return false, path
+func dfs(root *TreeNode, arr []byte, target int) []byte {
+	if root.Val == target {
+		return arr
 	}
-
-	_, path := dfs(root, point, make([]rune, 0))
-	return string(path)
-}
-
-func buildDestPath(root *TreeNode, point int) string {
-	var dfs func(root *TreeNode, point int, path []rune) (bool, []rune)
-	dfs = func(root *TreeNode, point int, path []rune) (bool, []rune) {
-		if root == nil {
-			return false, path
-		}
-
-		if root.Val == point {
-			return true, path
-		}
-
-		left, leftPath := dfs(root.Left, point, append(path, LEFT))
-		if left {
-			return left, leftPath
-		}
-
-		right, rightPath := dfs(root.Right, point, append(path, RIGHT))
-		if right {
-			return right, rightPath
-		}
-
-		return false, path
-	}
-
-	_, path := dfs(root, point, make([]rune, 0))
-	return string(path)
-}
-
-func findLowestAncestor(root *TreeNode, startValue, destValue int) *TreeNode {
-	var dfs func(root *TreeNode, dest int, path []*TreeNode) (bool, []*TreeNode)
-	dfs = func(root *TreeNode, dest int, path []*TreeNode) (bool, []*TreeNode) {
-		if root == nil {
-			return false, path
-		}
-
-		path = append(path, root)
-		if root.Val == dest {
-			return true, path
-		}
-
-		left, leftPath := dfs(root.Left, dest, path)
-		if left {
-			return left, leftPath
-		}
-
-		right, rightPath := dfs(root.Right, dest, path)
-		if right {
-			return right, rightPath
-		}
-
-		return false, path
-	}
-
-	originPath := make([]*TreeNode, 0)
-	_, originPath = dfs(root, startValue, originPath)
-
-	destPath := make([]*TreeNode, 0)
-	_, destPath = dfs(root, destValue, destPath)
-
-	var middle *TreeNode
-	minLen := 0
-	if len(originPath) > len(destPath) {
-		minLen = len(destPath)
-	} else {
-		minLen = len(originPath)
-	}
-
-	for i := range minLen {
-		if originPath[i].Val == destPath[i].Val {
-			middle = originPath[i]
+	if root.Left != nil {
+		newArr := append(arr, 'L')
+		if found := dfs(root.Left, newArr, target); found != nil {
+			return found
 		}
 	}
-
-	return middle
+	if root.Right != nil {
+		newArr := append(arr, 'R')
+		if found := dfs(root.Right, newArr, target); found != nil {
+			return found
+		}
+	}
+	return nil
 }
